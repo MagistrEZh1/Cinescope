@@ -51,3 +51,15 @@ class DataGenerator:
             "passwordRepeat": password,
             "roles": ["USER"]
         }
+
+    @staticmethod
+    def generate_movie(genre_id=1):
+        return {
+            "name": f"Фильм {faker.uuid4()}",
+            "imageUrl": "https://image.url",
+            "price": random.randint(1, 1000),
+            "description": faker.sentence(),
+            "location": random.choice(["SPB", "MSK"]),
+            "published": True,
+            "genreId": genre_id
+        }

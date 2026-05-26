@@ -3,7 +3,7 @@ import pytest
 import requests
 
 from api.api_manager import ApiManager
-from core.constants import BASE_URL, REGISTER_ENDPOINT
+from core.constants import BASE_URL, MOVIES_BASE_URL, REGISTER_ENDPOINT, ADMIN_EMAIL, ADMIN_PASSWORD
 from custom_requester.custom_requester import CustomRequester
 from utils.data_generator import DataGenerator
 
@@ -45,7 +45,24 @@ def session():
 
 @pytest.fixture(scope="session")
 def api_manager(session):
+    return ApiManager(session, MOVIES_BASE_URL)
+
+@pytest.fixture(scope="session")
+def authenticated_api_manager(api_manager):
     """
-    Фикстура для создания экземпляра ApiManager.
+    Аутентифицированный ApiManager с админскими кредами.
     """
-    return ApiManager(session, BASE_URL)
+    api_manager.auth_api.authenticate((ADMIN_EMAIL, ADMIN_PASSWORD))
+    return api_manager
+
+
+@pytest.fixture
+def created_movie(authenticated_api_manager):
+    """
+    Создаёт фильм перед тестом и удаляет после.
+    """
+    movie_data = DataGenerator.generate_movie()
+    response = authenticated_api_manager.movies_api.create_movie(movie_data)
+    movie = response.json()
+    yield movie
+    authenticated_api_manager.movies_api.delete_movie(movie["id"], expected_status=[200, 404])
